@@ -73,3 +73,9 @@ variable "instance_type" {
   default     = "t2.micro"
   description = "ami"
 }
+
+variable "bucket_name" {
+  type        = string
+  default     = "t2.micro"
+  description = "taask-werod650_ilbv_889d_88lk0912"
+}

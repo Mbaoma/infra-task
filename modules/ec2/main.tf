@@ -205,6 +205,7 @@ resource "aws_lb" "my-lb" {
   }
 }
 
+
 # EC2 instance
 resource "aws_instance" "instance" {
   ami                    = var.ami
@@ -227,4 +228,21 @@ resource "aws_ssm_parameter" "cw_agent" {
   name        = "/cloudwatch-agent/config"
   type        = "String"
   value       = file("./userdata/cw_config.json")
+  overwrite = true
+}
+
+resource "aws_cloudwatch_metric_alarm" "monitorTaskEC2" {
+  alarm_name                = "terraform-test-monitorTaskEC25"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+  dimensions = {
+    LoadBalancer = aws_lb.my-lb.arn_suffix
+  }
 }
