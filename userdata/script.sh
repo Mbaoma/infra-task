@@ -1,9 +1,6 @@
 #! /bin/bash
-sudo apt update && sudo apt upgrade -y
+sudo apt update -y &&
 sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-
 
 # Set the file name and directory path
 file_name="index.html"

@@ -8,7 +8,7 @@ module "ec2" {
   environment = var.environment
   vpc_cidr    = var.vpc_cidr
   #public_subnets_cidr  = var.public_subnets_cidr
-  private_subnets_cidr = var.private_subnets_cidr
+  #private_subnets_cidr = var.private_subnets_cidr
   #availability_zone   = local.production_availability_zones
 
 }

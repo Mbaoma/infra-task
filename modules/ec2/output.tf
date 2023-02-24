@@ -11,11 +11,7 @@ output "private_subnets_id" {
 }
 
 output "default_sg_id" {
-  value = aws_security_group.InfraTask.id
-}
-
-output "security_groups_ids" {
-  value = ["${aws_security_group.InfraTask.id}"]
+  value = aws_security_group.InfraTask-sg.id
 }
 
 output "public_route_table" {
