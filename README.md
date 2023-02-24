@@ -17,6 +17,7 @@ $ git push origin dev
 ## To setup Certbot
 Run  the ```setupcertbot.sh``` file.
 ```bash
+$ chmod u+x setupcertbot.sh
 $ ./setupcertbot.sh
 ```
 
