@@ -1,7 +1,7 @@
-name: 'Plan Infra CI'
+name: 'Deploy Infra CI'
 
 on:
-    pull_request:
+    push:
         branches:
             - main
         paths:
@@ -16,36 +16,7 @@ env:
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
-    check-terraform-format:
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        steps:
-            - uses: actions/checkout@v2
-            - uses: hashicorp/setup-terraform@v1
-            - name: Terraform fmt
-              run: terraform fmt -check
-
-    infra-quality:
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        strategy:
-            matrix:
-                python-version: [3.7]
-        steps:
-            - uses: actions/checkout@v2
-            - name: Set up Python 3.8
-              uses: actions/setup-python@v1
-              with:
-                  python-version: 3.8
-            - name: Test with Checkov
-              id: checkov
-              uses: bridgecrewio/checkov-action@master
-              with:
-                  framework: terraform
-                  directory: .
-
     deploy:
-        needs: [check-terraform-format, infra-quality]
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
@@ -75,5 +46,5 @@ jobs:
             - name: Terraform init
               run: terraform init -backend-config="bucket=${{ env.TF_BUCKET }}" -backend-config="key=${{ env.TF_KEY }}"
 
-            - name: Terraform plan
-              run: terraform plan
+            - name: Terraform apply
+              run: terraform apply -auto-approve
