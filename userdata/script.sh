@@ -1,9 +1,7 @@
 #! /bin/bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-
+sudo yum update -y &&
+sudo yum install -y nginx
+sudo yum install certbot python3-certbot-nginx -y
 
 # Set the file name and directory path
 file_name="index.html"
