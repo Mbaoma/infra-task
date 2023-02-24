@@ -1,0 +1,79 @@
+name: 'Plan Infra CI'
+
+on:
+    pull_request:
+        branches:
+            - main
+        paths:
+            - '.'
+
+env:
+    FORCE_COLOR: 3
+    AWS_REGION: us-east-1
+    TF_BUCKET: my-terraform-bucket
+    TF_KEY: my-terraform-state.tfstate
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+    check-terraform-format:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v2
+            - uses: hashicorp/setup-terraform@v1
+            - name: Terraform fmt
+              run: terraform fmt -check
+
+    infra-quality:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        strategy:
+            matrix:
+                python-version: [3.7]
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.8
+            - name: Test with Checkov
+              id: checkov
+              uses: bridgecrewio/checkov-action@master
+              with:
+                  framework: terraform
+                  directory: .
+
+    deploy:
+        needs: [check-terraform-format, infra-quality]
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v2
+            - uses: hashicorp/setup-terraform@v1
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v1
+              with:
+                terraform_version: "1.1.0"
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-region: ${{ env.AWS_REGION }}
+                aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+
+            - name: Download Terraform state
+              uses: aws-actions/amazon-s3-fetch-object@v1
+              with:
+                region: ${{ env.AWS_REGION }}
+                bucket: ${{ env.TF_BUCKET }}
+                key: ${{ env.TF_KEY }}
+                path: ${GITHUB_WORKSPACE}/terraform/terraform.tfstate
+
+            - name: Terraform init
+              run: terraform init -backend-config="bucket=${{ env.TF_BUCKET }}" -backend-config="key=${{ env.TF_KEY }}"
+
+            - name: Terraform plan
+              run: terraform plan
