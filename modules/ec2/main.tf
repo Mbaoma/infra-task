@@ -4,6 +4,56 @@ locals {
   })
 }
 
+#IAM data
+data "aws_iam_policy_document" "iam_policy" {
+    statement {
+        sid = "1"
+
+    actions = [
+       "s3:GetObject",
+      "s3:ListBucket",
+       "s3:PutBucket",
+        "s3:WriteBucket",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["500082063890"]
+    }
+
+     resources = [
+      "arn:aws:s3:::${var.bucket_name}",
+      "${aws_s3_bucket.my_bucket.arn}/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "iam_role" {
+   statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "policy" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+
+    resources = [
+      "arn:aws:s3:::*",
+    ]
+  }
+}
+
 resource "tls_private_key" "infra_key" {
   algorithm = var.algorithm
 }
@@ -200,10 +250,17 @@ resource "aws_lb" "my-lb" {
 
   enable_deletion_protection = true
 
+  access_logs {
+    bucket  = aws_s3_bucket_acl.bucket_acl.bucket
+    prefix  = "test-lb"
+    enabled = true
+  }
+
   tags = {
     Environment = "production"
   }
 }
+
 
 # EC2 instance
 resource "aws_instance" "instance" {
@@ -227,4 +284,54 @@ resource "aws_ssm_parameter" "cw_agent" {
   name        = "/cloudwatch-agent/config"
   type        = "String"
   value       = file("./userdata/cw_config.json")
+}
+
+resource "aws_cloudwatch_metric_alarm" "monitorTaskEC2" {
+  alarm_name                = "terraform-test-monitorTaskEC25"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+  dimensions = {
+    LoadBalancer = aws_lb.my-lb.arn_suffix
+  }
+}
+
+#S3 Bucket 
+resource "aws_s3_bucket" "my_bucket" {
+  bucket = var.bucket_name
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
+  bucket = aws_s3_bucket.my_bucket.id
+  acl    = "private"
+}
+
+#IAM Policy for S3 bucket 
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  bucket = aws_s3_bucket.my_bucket.id
+  policy = "${data.aws_iam_policy_document.iam_policy.json}"
+}
+
+#IAM Role to fetch data from S3 bucket
+resource "aws_iam_role" "s3_role" {
+  name               = "s3_role"
+  assume_role_policy = "${data.aws_iam_policy_document.iam_role.json}"
+}
+
+resource "aws_iam_policy" "iam_policy" {
+  name   = "example_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.policy.json
+}
+
+#Policy attachment
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.s3_role.name
+  policy_arn = aws_iam_policy.iam_policy.arn
 }

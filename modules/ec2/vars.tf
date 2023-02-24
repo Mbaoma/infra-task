@@ -73,3 +73,9 @@ variable "instance_type" {
   default     = "t2.micro"
   description = "ami"
 }
+
+variable "bucket_name" {
+  type        = string
+  default     = "t2.micro"
+  description = "my-terraform-bucket88lk0912"
+}
