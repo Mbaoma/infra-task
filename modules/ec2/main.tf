@@ -229,6 +229,7 @@ resource "aws_ssm_parameter" "cw_agent" {
   name        = "/cloudwatch-agent/config"
   type        = "String"
   value       = file("./userdata/cw_config.json")
+  overwrite = true
 }
 
 resource "aws_cloudwatch_metric_alarm" "monitorTaskEC2" {
