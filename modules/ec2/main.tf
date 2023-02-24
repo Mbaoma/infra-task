@@ -147,7 +147,7 @@ resource "aws_security_group" "InfraTask-sg" {
   ]
 
   ingress {
-    description = "Only ssh bastion in public subnet"
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -185,7 +185,7 @@ resource "aws_security_group" "InfraTask" {
   ]
 
   ingress {
-    description     = "Only ssh bastion in public subnet"
+    description     = "SSH"
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
@@ -218,20 +218,6 @@ resource "aws_security_group" "InfraTask" {
 
   tags = {
     Environment = "${var.environment}"
-  }
-}
-
-#Load Balancer
-resource "aws_lb" "my-lb" {
-  name               = "test-lb-tf"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.InfraTask.id]
-  subnets            = [aws_subnet.public_subnet.id, aws_subnet.public_subnet1.id] #[for subnet in aws_subnet.public_subnet : subnet.id] 
-
-  enable_deletion_protection = true
-  tags = {
-    Environment = "production"
   }
 }
 
