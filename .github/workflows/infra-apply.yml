@@ -47,12 +47,6 @@ jobs:
 
             # - name: Terraform apply
             #   run: terraform apply -auto-approve
-          
-            - name: Terraform Destroy
-              env:
-                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              run: terraform destroy -auto-approve -input=false
 
             - name: Terraform init
               env:
@@ -62,7 +56,13 @@ jobs:
 
             - name: Terraform validation
               run: terraform validate
-
+            
+            - name: Terraform Destroy
+              env:
+                AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              run: terraform destroy -auto-approve -input=false
+              
             - name: Terraform apply
               env:
                 AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
