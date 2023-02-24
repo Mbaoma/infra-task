@@ -200,11 +200,6 @@ resource "aws_lb" "my-lb" {
 
   enable_deletion_protection = true
 
-  access_logs {
-    bucket  = aws_s3_bucket_acl.bucket_acl.bucket
-    prefix  = "test-lb"
-    enabled = true
-  }
 
   tags = {
     Environment = "production"
