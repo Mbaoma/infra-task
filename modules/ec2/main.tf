@@ -200,7 +200,6 @@ resource "aws_lb" "my-lb" {
 
   enable_deletion_protection = true
 
-
   tags = {
     Environment = "production"
   }
