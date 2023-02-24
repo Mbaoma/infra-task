@@ -25,8 +25,7 @@ jobs:
         - name: terraform destroy
           uses: dflook/terraform-destroy@v1
           with:
-            path: my-terraform-config
-            workspace: ${{ github.head_ref }}
+            path: '.'
 
     deploy:
         runs-on: ubuntu-latest

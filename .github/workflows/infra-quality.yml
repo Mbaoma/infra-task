@@ -25,9 +25,8 @@ jobs:
         - name: terraform destroy
           uses: dflook/terraform-destroy@v1
           with:
-            path: my-terraform-config
-            workspace: ${{ github.head_ref }}
-            
+            path: '.'
+
     check-terraform-format:
         runs-on: ubuntu-latest
         timeout-minutes: 10
