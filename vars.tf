@@ -4,7 +4,7 @@ variable "AWS_REGION" {
 
 variable "environment" {
   description = "Deployment Environment"
-  default     = "SCA"
+  default     = "InfraTask"
 }
 
 variable "vpc_cidr" {
