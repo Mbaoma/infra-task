@@ -1,6 +1,7 @@
 #! /bin/bash
 sudo apt update -y &&
 sudo apt install -y nginx
+sudo apt install certbot python3-certbot-nginx -y
 
 # Set the file name and directory path
 file_name="index.html"

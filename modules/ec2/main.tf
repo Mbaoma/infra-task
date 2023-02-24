@@ -43,7 +43,7 @@ resource "aws_internet_gateway" "ig" {
 # Elastic-IP (eip) for NAT
 resource "aws_eip" "nat_eip" {
   vpc        = true
-  depends_on = [aws_internet_gateway.ig]
+  #depends_on = [aws_internet_gateway.ig]
   instance = aws_instance.instance.id
 }
 
@@ -79,7 +79,7 @@ resource "aws_subnet" "private_subnet" {
   vpc_id                  = aws_vpc.vpc.id
   #count                   = length(var.private_subnets_cidr)
   cidr_block              = "10.0.4.0/24"
-  availability_zone       = var.availability_zone1
+  availability_zone       = var.availability_zone2
   map_public_ip_on_launch = false
 
   tags = {
