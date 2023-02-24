@@ -1,3 +1,8 @@
+locals {
+  userdata = templatefile("./userdata/cw_script.sh", {
+    ssm_cloudwatch_config = aws_ssm_parameter.cw_agent.name
+  })
+}
 
 resource "tls_private_key" "infra_key" {
   algorithm = var.algorithm
@@ -43,13 +48,17 @@ resource "aws_internet_gateway" "ig" {
 # Elastic-IP (eip) for NAT
 resource "aws_eip" "nat_eip" {
   vpc        = true
-  #depends_on = [aws_internet_gateway.ig]
+  instance = aws_instance.instance.id
+}
+
+resource "aws_eip" "nat_eip2" {
+  vpc        = true
   instance = aws_instance.instance.id
 }
 
 resource "aws_eip_association" "demo-eip-association" {
   instance_id   = aws_instance.instance.id
-  allocation_id = aws_eip.nat_eip.id
+  allocation_id = aws_eip.nat_eip2.id
 }
 
 # NAT
@@ -210,4 +219,12 @@ resource "aws_instance" "instance" {
   tags = {
     Name = "instance1"
   }
+}
+
+#AWS CloudWatch
+resource "aws_ssm_parameter" "cw_agent" {
+  description = "Cloudwatch agent config to configure custom log"
+  name        = "/cloudwatch-agent/config"
+  type        = "String"
+  value       = file("./userdata/cw_config.json")
 }
