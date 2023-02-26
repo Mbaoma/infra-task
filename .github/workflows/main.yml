@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
         branches:  [ main ]
+  
+permissions: read-all
 
 jobs:
   check-terraform-format:
@@ -37,7 +39,7 @@ jobs:
                   directory: .
 
   deploy:
-    #needs: [ check-terraform-format, infra-quality ]
+    needs: [ check-terraform-format, infra-quality ]
     runs-on: ubuntu-latest
     steps:
     - name: setup nginx

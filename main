@@ -15,28 +15,14 @@ resource "local_file" "private_key" {
   filename = var.filename
 }
 
-resource "aws_default_vpc" "default" {
- #checkov:skip=CKV_AWS_148: Use VPC
-}
-
-# VPC
-resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr
-  #checkov:skip=CKV2_AWS_11:Public ALB
-   #checkov:skip=CKV2_AWS_12:Public ALB
-
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name        = "${var.environment}-vpc"
-    Environment = var.environment
-  }
+data "aws_vpc" "default" {
+  default = true
+  cidr_block = "172.31.0.0/16"
 }
 
 # Internet Gateway for Public Subnet
 resource "aws_internet_gateway" "ig" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.default.id
   tags = {
     Name        = "${var.environment}-igw"
     Environment = var.environment
@@ -72,9 +58,9 @@ resource "aws_nat_gateway" "nat" {
 
 # Public subnet
 resource "aws_subnet" "public_subnet" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.1.0/24"
+  vpc_id            = data.aws_vpc.default.id
   availability_zone = var.availability_zone1
+  cidr_block = "172.31.16.0/20"
   tags = {
     "Name" = "public_subnet1"
   }
@@ -83,9 +69,9 @@ resource "aws_subnet" "public_subnet" {
 
 # Private Subnet
 resource "aws_subnet" "private_subnet" {
-  vpc_id                  = aws_vpc.vpc.id
+  vpc_id                  = data.aws_vpc.default.id
   #count                   = length(var.private_subnets_cidr)
-  cidr_block              = "10.0.4.0/24"
+  cidr_block = "172.31.32.0/20"
   availability_zone       = var.availability_zone2
   map_public_ip_on_launch = false
 
@@ -98,7 +84,7 @@ resource "aws_subnet" "private_subnet" {
 
 # Routing tables to route traffic for Private Subnet
 resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.default.id
 
   tags = {
     Name        = "${var.environment}-private-route-table"
@@ -108,7 +94,7 @@ resource "aws_route_table" "private" {
 
 # Routing tables to route traffic for Public Subnet
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = data.aws_vpc.default.id
 
   tags = {
     Name        = "${var.environment}-public-route-table"
@@ -144,20 +130,20 @@ resource "aws_route_table_association" "private" {
 }
 
 # Default Security Group of VPC
-resource "aws_security_group" "InfraTask-sg" {
+resource "aws_security_group" "InfraTask_sg" {
+  
   name        = "${var.environment}-sg"
   description = "Default SG to alllow traffic from the VPC"
-  vpc_id      = aws_vpc.vpc.id
-  depends_on = [
-    aws_vpc.vpc
-  ]
+  vpc_id      = "vpc-018f3d6ead2447e18"  #data.aws_vpc.default.id
+  depends_on = [data.aws_vpc.default]  #data.aws_vpc.default
+  
 
   ingress {
     description     = "SSH"
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    cidr_blocks = [aws_vpc.vpc.cidr_block]
+    cidr_blocks = [data.aws_vpc.default.cidr_block]
   }
 
   ingress {
@@ -173,12 +159,12 @@ resource "aws_security_group" "InfraTask-sg" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    cidr_blocks = [aws_vpc.vpc.cidr_block]
+     cidr_blocks = [data.aws_vpc.default.cidr_block]
   }
 
   egress {
-    description     = "egress"
     from_port   = 0
+    description = "Egress"
     to_port     = 0
     protocol    = "-1"
     self        = "true"
@@ -191,41 +177,66 @@ resource "aws_security_group" "InfraTask-sg" {
 }
 
 resource "aws_lb" "my-lb" {
-  name               = "test-lb-tf"
   #checkov:skip=CKV2_AWS_28:Public ALB
   #checkov:skip=CKV2_AWS_175:skip logging
   #checkov:skip=CKV2_AWS_176:skip logging
-   #checkov:skip=CKV_AWS_131:skip logging
-    #checkov:skip=CKV_AWS_91:skip logging
+  name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.InfraTask-sg.id]
-  subnets            = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id] #[for subnet in aws_subnet.public_subnet : subnet.id] 
-
+  security_groups    = [aws_security_group.InfraTask_sg.id]
+  subnets            = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id, ]
   enable_deletion_protection = true
+  drop_invalid_header_fields = true
+
+  access_logs {
+    bucket  = "testingci90pipeline5682wel98l"
+    prefix  = "test-lb"
+    enabled = true
+  } 
 
   tags = {
     Environment = "production"
   }
 }
 
+resource "aws_network_interface" "ni" {
+  subnet_id       = aws_subnet.public_subnet.id
+  private_ips     = ["10.0.0.50"]
+  security_groups = [aws_security_group.InfraTask_sg.id]
+  #cidr_blocks = ["0.0.0.0/0"]
+
+  attachment {
+    instance     = aws_instance.instance.id
+    device_index = 1
+  }
+}
 
 # EC2 instance
 resource "aws_instance" "instance" {
-  ami                    = var.ami
-   #checkov:skip=CKV_AWS_8:Public ALB
-   #checkov:skip=CKV2_AWS_41:Public ALB
-  #checkov:skip=CKV_AWS_135:skip logging
-  #checkov:skip=CKV_AWS_126:skip logging
-   #checkov:skip=CKV_AWS_79:skip logging
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public_subnet.id
+  ami           = var.ami
+  #checkov:skip=CKV2_AWS_41:skip logging
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.public_subnet.id
   #count                  = length(var.public_subnets_cidr)
   #subnet_id              = element(aws_subnet.public_subnet.*.id, count.index)
-  vpc_security_group_ids = [aws_security_group.InfraTask-sg.id]
+  vpc_security_group_ids = [aws_security_group.InfraTask_sg.id]
   key_name               = var.key_name
   #user_data              = "${file("./userdata/script.sh")}"
+  ebs_optimized        = true
+  monitoring           = true
 
+  root_block_device {
+    encrypted     = true
+ }
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
   tags = {
     Name = "instance1"
   }
