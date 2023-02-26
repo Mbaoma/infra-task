@@ -11,31 +11,31 @@ variable "vpc_cidr" {
 variable "public_subnet_cidr" {
   type        = list(any)
   description = "CIDR block for Public Subnet"
-  default     = ["10.0.1.0/24"]
+  default     = ["172.31.0.0/20"]
 }
 
 
 variable "private_subnet_cidr" {
   type        = list(any)
   description = "CIDR block for Private Subnet"
-  default     = ["10.0.4.0/24"]
+  default     = ["172.31.0.0/20"]
 }
 
 variable "region" {
   description = "Region"
-  default     = "us-east-1"
+  default     = "us-west-2"
 }
 
 variable "availability_zone1" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-east-1f"
+  default     = "us-west-2a"
 }
 
 variable "availability_zone2" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-east-1e"
+  default     = "us-west-2b"
 }
 
 variable "algorithm" {

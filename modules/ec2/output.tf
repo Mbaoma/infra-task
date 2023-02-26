@@ -1,13 +1,9 @@
-#output "vpc_id" {
-# value = aws_default_vpc.default.id
-#}
-
 output "public_subnets_id" {
-  value = ["${aws_default_subnet.default_az1.*.id}"]
+  value = ["${aws_subnet.public_subnet.*.id}"]
 }
 
 output "private_subnets_id" {
-  value = ["${aws_default_subnet.default_az2.*.id}"]
+  value = ["${aws_subnet.private_subnet.*.id}"]
 }
 
 #output "default_sg_id" {
