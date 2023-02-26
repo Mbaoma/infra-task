@@ -17,3 +17,7 @@ output "default_sg_id" {
 output "public_route_table" {
   value = aws_route_table.public.id
 }
+
+output ip_address {
+  value = aws_instance.instance.public_ip
+}

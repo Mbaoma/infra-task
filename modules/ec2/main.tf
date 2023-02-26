@@ -210,7 +210,7 @@ resource "aws_instance" "instance" {
   #subnet_id              = element(aws_subnet.public_subnet.*.id, count.index)
   vpc_security_group_ids = [aws_security_group.InfraTask-sg.id]
   key_name               = var.key_name
-  user_data              = file("./userdata/script.sh")
+  user_data              = "${file("./userdata/script.sh")}"
 
   tags = {
     Name = "instance1"
