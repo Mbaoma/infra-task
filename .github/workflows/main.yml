@@ -37,7 +37,7 @@ jobs:
                   directory: .
 
   deploy:
-    needs: build
+    needs: [ check-terraform-format, infra-quality ]
     runs-on: ubuntu-latest
     steps:
     - name: setup nginx
