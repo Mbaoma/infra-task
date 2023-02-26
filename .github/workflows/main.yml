@@ -53,7 +53,5 @@ jobs:
         sudo systemctl start nginx
         sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!, I dey.</h1></body>" | sudo tee /usr/share/nginx/html/index.html
         sudo nginx -t
-        sudo mkdir /ssl/private
-        sudo mkdir /ssl/certs
         sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/private/nginx-selfsigned.key -out /etc/nginx/ssl/certs/nginx-selfsigned.crt
         sudo openssl dhparam -out /etc/nginx/ssl/certs/dhparam.pem 2048
