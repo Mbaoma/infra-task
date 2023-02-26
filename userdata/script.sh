@@ -16,8 +16,8 @@ dir_path="/usr/share/nginx/html"
 sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!</h1></body>" | sudo tee /usr/share/nginx/html/index.html
 sudo nginx -t
 
-# sudo mkdir /ssl/private
-# sudo mkdir /ssl/certs
-# sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/private/nginx-selfsigned.key -out /etc/nginx/ssl/certs/nginx-selfsigned.crt
-# sudo openssl dhparam -out /etc/nginx/ssl/certs/dhparam.pem 2048
+sudo mkdir /ssl/private
+sudo mkdir /ssl/certs
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/private/nginx-selfsigned.key -out /etc/nginx/ssl/certs/nginx-selfsigned.crt
+sudo openssl dhparam -out /etc/nginx/ssl/certs/dhparam.pem 2048
 #sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/private/nginx-selfsigned.key -out /etc/nginx/ssl/certs/nginx-selfsigned.crt
