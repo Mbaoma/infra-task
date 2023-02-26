@@ -16,165 +16,69 @@ resource "local_file" "private_key" {
   filename = var.filename
 }
 
-resource "aws_default_vpc" "default" {
+#resource "aws_default_vpc" "default" {
+ # tags = {
+  #  Name = "Default VPC"
+  #}
+#}
+
+data "aws_vpc" "default" {
+  default = true
+  cidr_block = "10.0.0.0/16"
 }
 
-# VPC
-resource "aws_vpc" "vpc" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
 
-  tags = {
-    Name        = "${var.environment}-vpc"
-    Environment = var.environment
-  }
-}
-
-# Internet Gateway for Public Subnet
-resource "aws_internet_gateway" "ig" {
-  vpc_id = aws_vpc.vpc.id
-  tags = {
-    Name        = "${var.environment}-igw"
-    Environment = var.environment
-  }
-}
-
-# Elastic-IP (eip) for NAT
-resource "aws_eip" "nat_eip" {
-  vpc        = true
-  instance = aws_instance.instance.id
-}
-
-resource "aws_eip" "nat_eip2" {
-  vpc        = true
-  instance = aws_instance.instance.id
-}
-
-resource "aws_eip_association" "demo-eip-association" {
-  instance_id   = aws_instance.instance.id
-  allocation_id = aws_eip.nat_eip2.id
-}
-
-# NAT
-resource "aws_nat_gateway" "nat" {
-  allocation_id = aws_eip.nat_eip.id
-  subnet_id     = element(aws_subnet.public_subnet.*.id, 0)
-
-  tags = {
-    Name        = "nat"
-    Environment = "${var.environment}"
-  }
-}
-
-# Public subnet
-resource "aws_subnet" "public_subnet" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.1.0/24"
+resource "aws_default_subnet" "default_az1" {
   availability_zone = var.availability_zone1
+
   tags = {
-    "Name" = "public_subnet1"
+    Name = "Default subnet"
   }
 }
 
-
-# Private Subnet
-resource "aws_subnet" "private_subnet" {
-  vpc_id                  = aws_vpc.vpc.id
-  #count                   = length(var.private_subnets_cidr)
-  cidr_block              = "10.0.4.0/24"
-  availability_zone       = var.availability_zone2
-  map_public_ip_on_launch = false
+resource "aws_default_subnet" "default_az2" {
+  availability_zone = var.availability_zone2
 
   tags = {
-    Name        = "${var.environment}-private-subnet"
-    Environment = "${var.environment}"
+    Name = "Default subnet2"
   }
-}
-
-
-# Routing tables to route traffic for Private Subnet
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.vpc.id
-
-  tags = {
-    Name        = "${var.environment}-private-route-table"
-    Environment = "${var.environment}"
-  }
-}
-
-# Routing tables to route traffic for Public Subnet
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.vpc.id
-
-  tags = {
-    Name        = "${var.environment}-public-route-table"
-    Environment = "${var.environment}"
-  }
-}
-
-# Route for Internet Gateway
-resource "aws_route" "public_internet_gateway" {
-  route_table_id         = aws_route_table.public.id
-  destination_cidr_block = var.destination_cidr_block
-  gateway_id             = aws_internet_gateway.ig.id
-}
-
-# Route for NAT
-resource "aws_route" "private_nat_gateway" {
-  route_table_id         = aws_route_table.private.id
-  destination_cidr_block = var.destination_cidr_block
-  nat_gateway_id         = aws_nat_gateway.nat.id
-}
-
-# Route table associations for both Public & Private Subnets
-resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnet_cidr)
-  subnet_id      = element(aws_subnet.public_subnet.*.id, count.index)
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "private" {
-  count          = length(var.private_subnet_cidr)
-  subnet_id      = element(aws_subnet.private_subnet.*.id, count.index)
-  route_table_id = aws_route_table.private.id
 }
 
 # Default Security Group of VPC
-resource "aws_security_group" "InfraTask-sg" {
+resource "aws_security_group" "InfraTask_sg" {
   name        = "${var.environment}-sg"
   description = "Default SG to alllow traffic from the VPC"
-  vpc_id      = aws_vpc.vpc.id
-  depends_on = [
-    aws_vpc.vpc
-  ]
+  vpc_id      = "vpc-0b73fe3e7482cfb21"  #aws_default_vpc.default.id
+  depends_on = [data.aws_vpc.default]  #aws_default_vpc.default
+  
 
   ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "SSH"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   ingress {
-    description = "HTTPS in public subnet"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "HTTPS in public subnet"
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   ingress {
-    description = "HTTPS in public subnet"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "HTTPS in public subnet"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   egress {
     from_port   = 0
+    description = "Egress"
     to_port     = 0
     protocol    = "-1"
     self        = "true"
@@ -190,28 +94,80 @@ resource "aws_lb" "my-lb" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.InfraTask-sg.id]
-  subnets            = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id] #[for subnet in aws_subnet.public_subnet : subnet.id] 
+  security_groups    = [aws_security_group.InfraTask_sg.id]
+  subnets            = [aws_default_subnet.default_az1.id, aws_default_subnet.default_az2.id, ]
+  #[aws_default_subnet.default_az1.id, aws_subnet.private_subnet.id] #[for subnet in aws_default_subnet.default_az1 : subnet.id] 
 
   enable_deletion_protection = true
+  drop_invalid_header_fields = true
+
+  access_logs {
+    bucket  = "testingci90pipeline5682wel98l"
+    prefix  = "test-lb"
+    enabled = true
+  }
 
   tags = {
     Environment = "production"
   }
 }
 
+#WAF
+data "aws_wafregional_web_acl" "fwaf_protection" {
+  name = "tfWAFRegionalWebACL"
+}
+
+resource "aws_wafregional_web_acl_association" "fwaf_protection" {
+  resource_arn = aws_lb.my-lb.arn
+  web_acl_id   = data.aws_wafregional_web_acl.fwaf_protection.id
+}
+
+resource "aws_network_interface" "ni" {
+  subnet_id       = aws_default_subnet.default_az1.id
+  private_ips     = aws_instance.instance.private_ip
+  security_groups = [aws_security_group.InfraTask_sg.id]
+
+  attachment {
+    instance     = aws_instance.instance.id
+    device_index = 1
+  }
+}
 
 # EC2 instance
 resource "aws_instance" "instance" {
-  ami                    = var.ami
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public_subnet.id
+  ami           = var.ami
+  instance_type = var.instance_type
+  subnet_id     = aws_default_subnet.default_az1.id
   #count                  = length(var.public_subnets_cidr)
-  #subnet_id              = element(aws_subnet.public_subnet.*.id, count.index)
-  vpc_security_group_ids = [aws_security_group.InfraTask-sg.id]
+  #subnet_id              = element(aws_default_subnet.default_az1.*.id, count.index)
+  vpc_security_group_ids = [aws_security_group.InfraTask_sg.id]
   key_name               = var.key_name
-  user_data              = file("./userdata/script.sh")
+  #user_data              = "${file("./userdata/script.sh")}"
+  ebs_optimized        = true
+  monitoring           = true
+  iam_instance_profile = "user"
 
+  root_block_device {
+    encrypted     = true
+ }
+
+  #network_interface {
+  # network_interface_id = aws_network_interface.ni.id
+  #device_index         = 0
+  #}
+
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+
+  #rwaf_protectiont_block_device {
+  # encrypted     = true
+  #}
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
   tags = {
     Name = "instance1"
   }

@@ -29,13 +29,13 @@ variable "region" {
 variable "availability_zone1" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-east-1a"
+  default     = "us-east-1f"
 }
 
 variable "availability_zone2" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-east-1b"
+  default     = "us-east-1e"
 }
 
 variable "algorithm" {
@@ -52,7 +52,7 @@ variable "key_name" {
 
 variable "filename" {
   type        = string
-  default     = "webserver.pem"
+  default     = "InfraTask.pem"
   description = "private key"
 }
 
@@ -72,10 +72,4 @@ variable "instance_type" {
   type        = string
   default     = "t2.micro"
   description = "ami"
-}
-
-variable "bucket_name" {
-  type        = string
-  default     = "t2.micro"
-  description = "taask-werod650_ilbv_889d_88lk0912"
 }

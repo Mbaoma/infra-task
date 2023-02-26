@@ -1,0 +1,56 @@
+name: CI/CD to deploy app
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+        branches:  [ main ]
+
+jobs:
+  check-terraform-format:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v2
+            - uses: hashicorp/setup-terraform@v1
+            - name: Terraform fmt
+              run: terraform fmt -check
+
+  infra-quality:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        strategy:
+            matrix:
+                python-version: [3.7]
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v1
+              with:
+                  python-version: 3.8
+
+            - name: Test with Checkov
+              id: checkov
+              uses: bridgecrewio/checkov-action@master
+              with:
+                  framework: terraform
+                  directory: .
+
+  deploy:
+    #needs: [ check-terraform-format, infra-quality ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup nginx
+      env:
+          PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY  }}
+          HOSTNAME : ${{ secrets.HOSTNAME  }}
+          USER_NAME : ${{ secrets.USER_NAME  }}
+      run: |
+        sudo amazon-linux-extras install nginx1 -y &&
+        sudo amazon-linux-extras install epel -y   &&
+        sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y &&
+        sudo yum install certbot python-certbot-nginx -y &&
+        sudo systemctl start nginx
+        sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!, I dey.</h1></body>" | sudo tee /usr/share/nginx/html/index.html
+        sudo nginx -t
+        
