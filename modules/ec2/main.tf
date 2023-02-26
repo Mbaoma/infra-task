@@ -52,7 +52,7 @@ resource "aws_security_group" "InfraTask_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = aws_default_vpc.default.cidr_block
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   ingress {
@@ -60,7 +60,7 @@ resource "aws_security_group" "InfraTask_sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   ingress {
@@ -68,11 +68,12 @@ resource "aws_security_group" "InfraTask_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.InfraTask_sg.id]
   }
 
   egress {
     from_port   = 0
+    description = "Egress"
     to_port     = 0
     protocol    = "-1"
     self        = "true"
@@ -93,12 +94,39 @@ resource "aws_lb" "my-lb" {
   #[aws_default_subnet.default_az1.id, aws_subnet.private_subnet.id] #[for subnet in aws_default_subnet.default_az1 : subnet.id] 
 
   enable_deletion_protection = true
+  drop_invalid_header_fields = true
+
+  access_logs {
+   bucket  = "testingci90pipeline5682wel98l"
+   prefix  = "test-lb"
+   enabled = true
+ }
 
   tags = {
     Environment = "production"
   }
 }
 
+#WAF
+data "aws_wafregional_web_acl" "fwaf_protection" {
+  name = "tfWAFRegionalWebACL"
+}
+
+resource "aws_wafregional_web_acl_association" "fwaf_protection" {
+  resource_arn = aws_lb.my-lb.arn
+  web_acl_id = data.aws_wafregional_web_acl.fwaf_protection.id
+}
+
+resource "aws_network_interface" "ni" {
+  subnet_id       = aws_default_subnet.default_az1.id
+  private_ips     = aws_instance.instance.private_ip
+  security_groups = [aws_security_group.InfraTask_sg.id]
+
+  attachment {
+    instance     = aws_instance.instance.id
+    device_index = 1
+  }
+}
 
 # EC2 instance
 resource "aws_instance" "instance" {
@@ -110,7 +138,27 @@ resource "aws_instance" "instance" {
   vpc_security_group_ids = [aws_security_group.InfraTask_sg.id]
   key_name               = var.key_name
   user_data              = "${file("./userdata/script.sh")}"
+  ebs_optimized = true
+  monitoring = true 
+  iam_instance_profile = "user"
 
+  #network_interface {
+   # network_interface_id = aws_network_interface.ni.id
+    #device_index         = 0
+  #}
+
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+
+  #rwaf_protectiont_block_device {
+   # encrypted     = true
+ #}
+
+  metadata_options {
+       http_endpoint = "enabled"
+       http_tokens   = "required"
+  }
   tags = {
     Name = "instance1"
   }
