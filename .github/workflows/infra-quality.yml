@@ -13,8 +13,8 @@ on:
 env:
     FORCE_COLOR: 3
     AWS_REGION: us-east-1
-    TF_BUCKET: infra-task
-    TF_KEY: infra/infra-task.tfstate
+    TF_BUCKET: ${{ secrets.TF_BUCKET }}
+    TF_KEY: ${{ secrets.TF_KEY }}
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 

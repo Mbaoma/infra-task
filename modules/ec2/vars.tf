@@ -49,3 +49,5 @@ variable "infra_task_sg_id" {}
 variable "infra_task_subnet_id" {}
 
 variable "infra_task_subnet_id_1" {}
+
+variable "infra_task_vpc_id" {}

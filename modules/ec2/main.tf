@@ -32,6 +32,20 @@ resource "local_file" "private_key" {
   filename = var.filename
 }
 
+# EC2 instance
+resource "aws_instance" "infra_task_instance" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  subnet_id              = var.infra_task_subnet_id_1
+  vpc_security_group_ids = [var.infra_task_sg_id]
+  key_name               = var.key_name
+  user_data              = file("./userdata/script.sh")
+  availability_zone      = "us-east-2a"
+  tags = {
+    Name = "infra-task-instance"
+  }
+}
+
 resource "aws_lb" "infra_task_lb" {
   name               = "infra-task-lb"
   internal           = false
@@ -43,29 +57,45 @@ resource "aws_lb" "infra_task_lb" {
   drop_invalid_header_fields = true
 }
 
+resource "aws_lb_target_group" "infra_task_target_group" {
+  name        = "infra-task-target-group"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = var.infra_task_vpc_id
+  target_type = "instance"
 
-
-# EC2 instance
-resource "aws_instance" "infra_task_instance" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
-  subnet_id     = var.infra_task_subnet_id_1
-  vpc_security_group_ids = [var.infra_task_sg_id]
-  key_name               = var.key_name
-  user_data              = "${file("./userdata/script.sh")}"
-  availability_zone = "us-east-2a"
-  ebs_optimized = true
-  monitoring = true
-  root_block_device {
-    encrypted = true
-  }
-  tags = {
-    Name = "infra-task-instance"
+  health_check {
+    enabled             = true
+    healthy_threshold   = 3
+    unhealthy_threshold = 2
+    timeout             = 3
+    interval            = 30
+    matcher             = 200
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "monitorTaskEC2" {
-  alarm_name                = "terraform-test-monitorTaskEC25"
+resource "aws_lb_listener" "infra_task_listener" {
+  load_balancer_arn = aws_lb.infra_task_lb.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.infra_task_target_group.arn
+  }
+}
+
+resource "aws_lb_target_group_attachment" "infra_task_target_group_attachment" {
+  target_group_arn = aws_lb_target_group.infra_task_target_group.arn
+  target_id        = aws_instance.infra_task_instance.id
+  port             = 80
+}
+
+resource "aws_cloudwatch_metric_alarm" "infra_task_metric_alarm" {
+  alarm_name                = "infra-task-metric-alarm"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
   metric_name               = "CPUUtilization"
