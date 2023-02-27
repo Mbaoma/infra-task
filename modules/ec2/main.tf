@@ -51,7 +51,7 @@ resource "aws_lb" "my-lb" {
   internal                   = false
   load_balancer_type         = "application"
   security_groups            = [var.sg_id]
-  subnets                    = [var.subnet_id,var.subnet_id2 ]
+  subnets                    = [var.subnet_id, var.subnet_id2]
   drop_invalid_header_fields = true
   enable_deletion_protection = true
 }
@@ -82,7 +82,7 @@ resource "aws_lb_listener" "listener" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "redirect"
+    type = "redirect"
     redirect {
       port        = "443"
       protocol    = "HTTPS"

@@ -10,7 +10,7 @@ module "ec2" {
   private_subnet_cidr = module.networking.private_subnet_id
   public_subnet_cidr  = module.networking.public_subnet_id
   subnet_id           = module.networking.subnet_id
-  subnet_id2           = module.networking.subnet_id2
+  subnet_id2          = module.networking.subnet_id2
 }
 
 module "networking" {
