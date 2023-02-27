@@ -3,39 +3,21 @@ variable "environment" {
   default     = "InfraTask"
 }
 
-variable "vpc_cidr" {
-  description = "CIDR block of the vpc"
-  default     = "10.0.0.0/16"
-}
-
-variable "public_subnet_cidr" {
-  type        = list(any)
-  description = "CIDR block for Public Subnet"
-  default     = ["172.31.0.0/20"]
-}
-
-
-variable "private_subnet_cidr" {
-  type        = list(any)
-  description = "CIDR block for Private Subnet"
-  default     = ["172.31.0.0/20"]
-}
-
 variable "region" {
   description = "Region"
-  default     = "us-west-2"
+  default     = "us-west-1"
 }
 
 variable "availability_zone1" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-west-2a"
+  default     = "us-west-1b"
 }
 
 variable "availability_zone2" {
   type        = string
   description = "AZ in which all the resources will be deployed"
-  default     = "us-west-2b"
+  default     = "us-west-1c"
 }
 
 variable "algorithm" {
@@ -56,15 +38,9 @@ variable "filename" {
   description = "private key"
 }
 
-variable "destination_cidr_block" {
-  type        = string
-  default     = "0.0.0.0/0"
-  description = "destination_cidr_block"
-}
-
 variable "ami" {
   type        = string
-  default     = "ami-0b5eea76982371e91"
+  default     = "ami-00569e54da628d17c"
   description = "ami"
 }
 
@@ -73,3 +49,15 @@ variable "instance_type" {
   default     = "t2.micro"
   description = "ami"
 }
+
+variable "sg_id" {}
+
+variable "public_subnet_cidr" {}
+
+variable "private_subnet_cidr" {}
+
+variable "vpc_id" {}
+
+variable "subnet_id" {}
+
+variable "subnet_id2" {}
