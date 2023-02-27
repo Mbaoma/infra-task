@@ -10,7 +10,7 @@ permissions: read-all
 
 jobs:
   check-terraform-format:
-        runs-on: [self-hosted, linux, X86]
+        runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v2
@@ -19,7 +19,7 @@ jobs:
               run: terraform fmt -check
 
   infra-quality:
-        runs-on: [self-hosted, linux, X86]
+        runs-on: ubuntu-latest
         timeout-minutes: 10
         strategy:
             matrix:
