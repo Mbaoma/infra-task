@@ -48,10 +48,10 @@ jobs:
           HOSTNAME : ${{ secrets.HOSTNAME  }}
           USER_NAME : ${{ secrets.USER_NAME  }}
       run: |
-        sudo amazon-linux-extras install nginx1 -y &&
-        sudo amazon-linux-extras install epel -y   &&
-        sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y &&
-        sudo yum install certbot python-certbot-nginx -y &&
+        sudo amazon-linux-extras install nginx1 -y 
+        sudo amazon-linux-extras install epel -y   
+        sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y 
+        sudo yum install certbot python-certbot-nginx -y 
         sudo systemctl start nginx
         sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!, I dey.</h1></body>" | sudo tee /usr/share/nginx/html/index.html
         sudo nginx -t
