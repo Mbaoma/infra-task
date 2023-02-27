@@ -40,7 +40,7 @@ variable "filename" {
 
 variable "ami" {
   type        = string
-  default     = "ami-00569e54da628d17c"
+  default     = "ami-0d50e5e845c552faf"
   description = "ami"
 }
 
