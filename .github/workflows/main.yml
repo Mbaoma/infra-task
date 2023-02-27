@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     needs: [ check-terraform-format, infra-quality ]
-    runs-on: [self-hosted, linux, X86]
+    runs-on: [self-hosted, linux, ARM64]
     steps:
     - name: setup nginx
       env:
