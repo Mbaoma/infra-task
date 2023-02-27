@@ -54,6 +54,6 @@ jobs:
         sudo systemctl start nginx
         sudo systemctl enable nginx
         sudo apt install certbot python3-certbot-nginx -y
-        sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!</h1></body>" | sudo tee /var/www/html/index.nginx-debian.html
+        sudo echo "<head><title>Hello World</title></head><body><h1>You can edit this page on every pull request.</h1></body>" | sudo tee /var/www/html/index.nginx-debian.html
         sudo nginx -t
         
