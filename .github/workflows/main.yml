@@ -40,7 +40,7 @@ jobs:
 
   deploy:
     needs: [ check-terraform-format, infra-quality ]
-    runs-on: [self-hosted, linux, ARM64]
+    runs-on: ubuntu-latest
     steps:
     - name: setup nginx
       env:
@@ -48,12 +48,12 @@ jobs:
           HOSTNAME : ${{ secrets.HOSTNAME  }}
           USER_NAME : ${{ secrets.USER_NAME  }}
       run: |
-        sudo yum update -y
-        sudo amazon-linux-extras install nginx1 -y 
-        sudo amazon-linux-extras install epel -y   
-        sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y 
-        sudo yum install certbot python-certbot-nginx -y 
+        sudo apt update -y 
+        sudo apt install -y nginx
+        sudo apt install -y nginx-core
         sudo systemctl start nginx
-        sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!, I dey.</h1></body>" | sudo tee /usr/share/nginx/html/index.html
+        sudo systemctl enable nginx
+        sudo apt install certbot python3-certbot-nginx -y
+        sudo echo "<head><title>Hello World</title></head><body><h1>Hello World!</h1></body>" | sudo tee /var/www/html/index.nginx-debian.html
         sudo nginx -t
         
