@@ -54,6 +54,11 @@ resource "aws_instance" "infra_task_instance" {
   key_name               = var.key_name
   user_data              = "${file("./userdata/script.sh")}"
   availability_zone = "us-east-2a"
+  ebs_optimized = true
+  monitoring = true
+  root_block_device {
+    encrypted = true
+  }
   tags = {
     Name = "infra-task-instance"
   }
