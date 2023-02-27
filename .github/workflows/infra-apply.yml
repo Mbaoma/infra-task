@@ -3,15 +3,13 @@ name: 'Deploy Infra CI'
 on:
     push:
         branches:
-            - main
-        paths:
-            - '.'
+            - update-script
 
 env:
     FORCE_COLOR: 3
-    AWS_REGION: us-east-1
-    TF_BUCKET: my-terraform-bucket
-    TF_KEY: my-terraform-state.tfstate
+    AWS_REGION: us-east-2
+    TF_BUCKET: infra-task
+    TF_KEY: infra/infra-task.tfstate
     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -36,15 +34,20 @@ jobs:
                 aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
 
             - name: Download Terraform state
-              uses: aws-actions/amazon-s3-fetch-object@v1
-              with:
-                region: ${{ env.AWS_REGION }}
-                bucket: ${{ env.TF_BUCKET }}
-                key: ${{ env.TF_KEY }}
-                path: ${GITHUB_WORKSPACE}/terraform/terraform.tfstate
+              run: |
+                aws s3 cp s3://${{ env.TF_BUCKET }}/${{ env.TF_KEY }} ${GITHUB_WORKSPACE}/terraform/terraform.tfstate
+              # uses: aws-actions/amazon-s3-fetch-object@v1
+              # with:
+              #   region: ${{ env.AWS_REGION }}
+              #   bucket: ${{ env.TF_BUCKET }}
+              #   key: ${{ env.TF_KEY }}
+              #   path: ${GITHUB_WORKSPACE}/terraform/terraform.tfstate
 
             - name: Terraform init
               run: terraform init -backend-config="bucket=${{ env.TF_BUCKET }}" -backend-config="key=${{ env.TF_KEY }}"
 
-            - name: Terraform apply
-              run: terraform apply -auto-approve
+            # - name: Terraform apply
+            #   run: terraform apply -auto-approve
+
+            # - name: Terraform apply
+            #   run: terraform apply -auto-approve
