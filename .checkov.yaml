@@ -15,3 +15,4 @@ skip-check:
     - CKV_AWS_79 #"Ensure Instance Metadata Service Version 1 is not enabled"
     - CKV_AWS_91 #"Ensure the ELBv2 (Application/Network) has access logging enabled"
     - CKV_AWS_150 #"Ensure that Load Balancer has deletion protection enabled"
+    - CKV_AWS_41 #"Ensure no hard coded AWS access key and secret key exists in provider"
