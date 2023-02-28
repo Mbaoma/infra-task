@@ -60,7 +60,7 @@ jobs:
       uses: hashicorp/setup-terraform@v1
     
     - name: Terraform initialize
-      run: terraform init -backend-config=./backend.tf
+      run: terraform init 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TF_ACTION_WORKING_DIR: '.'
@@ -69,6 +69,11 @@ jobs:
 
     - name: Terraform Plan
       run: terraform plan -input=false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TF_ACTION_WORKING_DIR: '.'
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
     - name: Terraform Apply
       if: github.ref == 'refs/heads/"main"' && github.event_name == 'push'
