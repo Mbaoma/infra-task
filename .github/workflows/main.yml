@@ -60,7 +60,7 @@ jobs:
       uses: hashicorp/setup-terraform@v1
     
     - name: Terraform initialize
-      run: terraform init 
+      run: terraform init -backend-config=./backend.tf
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TF_ACTION_WORKING_DIR: '.'
