@@ -23,7 +23,7 @@ resource "aws_instance" "instance" {
   vpc_security_group_ids = [var.sg_id]
   key_name               = var.key_name
   availability_zone      = var.availability_zone1
-  #user_data              = "${file("./userdata/script.sh")}"
+  user_data              = "${file("./userdata/script.sh")}"
 
   tags = {
     Name = "instance1"
